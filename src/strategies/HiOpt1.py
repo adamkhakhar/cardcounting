@@ -37,4 +37,5 @@ class HiOpt1(BaseStrategy):
 
     def hit_or_pass(self) -> dict:
         current_count = self.running_count / self.remaining_cards
+        print("Player running count", current_count)
         return {"current_count": current_count, "hit": self.default_hit_pass_behavior}

@@ -3,7 +3,7 @@ import sys
 from typing import List
 import random
 
-sys.path.append(os.dirname(os.path.realpath(__file__)))
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 from Card import Card
 
@@ -27,6 +27,9 @@ class Shoe:
     def reset(self):
         random.shuffle(self._cards)
         self._curr_index = 0
+
+    def num_cards_left(self) -> int:
+        return len(self._cards) - self._curr_index
 
     def get_next_card(self, n=1) -> List[Card]:
         if self._curr_index + n >= len(self._cards):
