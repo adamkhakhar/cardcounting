@@ -3,7 +3,7 @@ def map_hand_to_hit(
 ) -> bool:
     # player count adjust
     player_count_other += max(0, player_num_aces - 1)
-    player_num_aces = max(1, player_num_aces)
+    player_num_aces = min(1, player_num_aces)
     # dealer count adjust
     dealer_card = min(10, dealer_card) if dealer_card != 14 else 14
 

@@ -31,5 +31,8 @@ class BaseStrategy:
         self.hand_count_other = 0
         self.dealer_card = -1
 
+    def new_shoe(self):
+        self.new_hand()
+
     def place_bet(self) -> float:
         pass

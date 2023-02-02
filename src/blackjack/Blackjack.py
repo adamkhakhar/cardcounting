@@ -27,7 +27,12 @@ class BlackJack:
     def execute_round(self):
         if self.shoe.num_cards_left() <= self.shoe_limit_card:
             return None
-        curr_round_data = {"player_hit": [], "dealer_hit": [], "player_win": None}
+        curr_round_data = {
+            "player_hit": [],
+            "dealer_hit": [],
+            "player_win": None,
+            "player_blackjack": False,
+        }
         # bet
         curr_round_data["bet"] = self.player_strategy.place_bet()
         assert curr_round_data["bet"] >= 0
@@ -40,16 +45,6 @@ class BlackJack:
         curr_round_data["dealer_cards"] = self.shoe.get_next_card(n=2)
         curr_round_data["player_cards"] = self.shoe.get_next_card(n=2)
 
-        # check if dealer has 21
-        if any([c.value == 14 for c in curr_round_data["dealer_cards"]]) and any(
-            [c.value in [10, 11, 12, 13] for c in curr_round_data["dealer_cards"]]
-        ):
-            if self.log:
-                print("Dealer Blackjack")
-                print(" ".join([c.__str__() for c in curr_round_data["dealer_cards"]]))
-            curr_round_data["player_win"] = False
-            return curr_round_data
-
         # deal cards
         for agent, cards in [
             (self.dealer_strategy, curr_round_data["dealer_cards"]),
@@ -59,6 +54,15 @@ class BlackJack:
             for card in cards:
                 agent.receive_card(card)
                 agent.view_card(card)
+
+        # check if player has ace card blackjack
+        if any([c.value == 14 for c in curr_round_data["player_cards"]]) and any(
+            [c.value in [10, 11, 12, 13] for c in curr_round_data["player_cards"]]
+        ):
+            if self.log:
+                print("Player Blackjack")
+                print(" ".join([c.__str__() for c in curr_round_data["player_cards"]]))
+            curr_round_data["player_blackjack"] = True
 
         # show player dealer faceup card
         self.player_strategy.peek_dealer_card(curr_round_data["dealer_cards"][0])
@@ -146,9 +150,12 @@ class BlackJack:
                 )
             ]
         )
-        curr_round_data["player_win"] = (
-            None if player_best == dealer_best else player_best > dealer_best
-        )
+        if dealer_best == player_best:
+            curr_round_data["player_win"] = None
+            if dealer_best == 21 and player_best == 21:
+                curr_round_data["player_blackjack"] = False
+        else:
+            curr_round_data["player_win"] = player_best > dealer_best
         if self.log:
             print(
                 f'Player {"Tie" if curr_round_data["player_win"] is None else "Win" if curr_round_data["player_win"] else "Lose"}'

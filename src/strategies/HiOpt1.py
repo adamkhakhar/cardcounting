@@ -55,3 +55,8 @@ class HiOpt1(BaseStrategy):
     def place_bet(self) -> float:
         current_count = self.running_count / self.remaining_cards
         return self.count_to_bet(current_count)
+
+    def new_shoe(self):
+        self.running_count = 0
+        self.remaining_cards = 52 * self.num_decks
+        self.dealer_card = -1
