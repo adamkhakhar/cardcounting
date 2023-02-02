@@ -24,18 +24,34 @@ class HiOpt1(BaseStrategy):
         13: -1,
     }
 
-    def __init__(self, default_hit_pass_behavior: bool, num_decks: int):
+    def __init__(self, count_to_bet, hand_to_hit, num_decks: int):
         super().__init__(info="HiOpt1")
-        self.default_hit_pass_behavior = default_hit_pass_behavior
         self.num_decks = num_decks
         self.running_count = 0
         self.remaining_cards = 52 * num_decks
+        self.count_to_bet = count_to_bet
+        self.hand_to_hit = hand_to_hit
+        self.dealer_card = -1
 
     def view_card(self, card: Card):
         self.running_count += HiOpt1.map_value_to_count[card.value]
         self.remaining_cards -= 1
 
+    def peek_dealer_card(self, card: Card):
+        self.view_card(card)
+        self.dealer_card = card.value
+
     def hit_or_pass(self) -> dict:
+        return {
+            "current_count": {
+                "hand_num_aces": self.hand_num_aces,
+                "hand_count_other": self.hand_count_other,
+            },
+            "hit": self.hand_to_hit(
+                self.hand_num_aces, self.hand_count_other, self.dealer_card
+            ),
+        }
+
+    def place_bet(self) -> float:
         current_count = self.running_count / self.remaining_cards
-        print("Player running count", current_count)
-        return {"current_count": current_count, "hit": self.default_hit_pass_behavior}
+        return self.count_to_bet(current_count)
