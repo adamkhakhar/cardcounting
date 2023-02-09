@@ -3,6 +3,9 @@
 - Use an existing strategy or create a custom card-counting strategy (see `src/strategies`).
 - Simulate with varying number of decks in the shoe and vary number of shoes (see `/src/execution/runner.py`)
 
+## Default Hit/Stand Strategy
+[Thorp Strategy](/src/utils/strategy_picture.png)
+
 ## Codebase Structure
 ```
 .
