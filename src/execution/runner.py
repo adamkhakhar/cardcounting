@@ -7,7 +7,8 @@ import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from shoe.Shoe import Shoe
 from strategies.HiOpt1 import HiOpt1
-from strategies.HiOpt2 import HiOpt2
+
+# from strategies.HiOpt2 import HiOpt2
 from blackjack.Blackjack import BlackJack
 from utils.default_strategies import map_hand_to_hit, count_to_bet
 
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     shoe = Shoe(args.num_decks)
-    player = HiOpt2(count_to_bet, map_hand_to_hit, args.num_decks)
+    player = HiOpt1(count_to_bet, map_hand_to_hit, args.num_decks)
     game = BlackJack(shoe, player, log=args.log)
     save_data = []
     for _ in range(args.num_shoes):

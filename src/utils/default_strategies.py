@@ -40,4 +40,5 @@ def map_hand_to_hit(
 
 
 def count_to_bet(cnt: float) -> float:
-    return 0.5 + cnt
+    true_count = max(0, cnt * 52)
+    return max(5, int(true_count) * 10)
