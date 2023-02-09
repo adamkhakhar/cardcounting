@@ -15,10 +15,10 @@ class BaseStrategy:
         if card.value == 14:
             self.hand_num_aces += 1
         else:
-            # print("receiving card", str(card))
-            # print("orig hand count other", self.hand_count_other)
             self.hand_count_other += min(10, card.value)
-            # print("after hand count other", self.hand_count_other)
+
+    def peek_dealer_card(self, card: Card):
+        pass
 
     def view_card(self, card: Card):
         pass
@@ -29,3 +29,10 @@ class BaseStrategy:
     def new_hand(self):
         self.hand_num_aces = 0
         self.hand_count_other = 0
+        self.dealer_card = -1
+
+    def new_shoe(self):
+        self.new_hand()
+
+    def place_bet(self) -> float:
+        pass

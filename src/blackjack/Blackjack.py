@@ -1,9 +1,11 @@
 import os
 import sys
+from typing import List
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from shoe.Shoe import Shoe
 from strategies.BaseStrategy import BaseStrategy
+from strategies.Dealer import Dealer
 from utils.card_utils import compute_available_counts
 
 
@@ -11,37 +13,37 @@ class BlackJack:
     def __init__(
         self,
         shoe: Shoe,
-        dealer_strategy: BaseStrategy,
         player_strategy: BaseStrategy,
         shoe_breakpoint=0.75,
         log=False,
     ):
         self.shoe = shoe
-        self.dealer_strategy = dealer_strategy
+        self.dealer_strategy = Dealer()
         self.player_strategy = player_strategy
         assert shoe_breakpoint <= 1 and shoe_breakpoint > 0
         self.shoe_limit_card = shoe.num_cards_left() * (1 - shoe_breakpoint)
         self.log = log
 
     def execute_round(self):
-        if self.log:
-            print("[New Round]")
         if self.shoe.num_cards_left() <= self.shoe_limit_card:
             return None
-        curr_round_data = {"player_hit": [], "dealer_hit": [], "player_win": None}
+        curr_round_data = {
+            "player_hit": [],
+            "dealer_hit": [],
+            "player_win": None,
+            "player_blackjack": False,
+        }
+        # bet
+        curr_round_data["bet"] = self.player_strategy.place_bet()
+        assert curr_round_data["bet"] >= 0
+
+        if self.log:
+            print("[New Round]")
+            print(f'Player bets: {round(curr_round_data["bet"], 4)}')
+
         # deal
         curr_round_data["dealer_cards"] = self.shoe.get_next_card(n=2)
         curr_round_data["player_cards"] = self.shoe.get_next_card(n=2)
-
-        # check if dealer has 21
-        if any([c.value == 14 for c in curr_round_data["dealer_cards"]]) and any(
-            [c.value in [10, 11, 12, 13] for c in curr_round_data["dealer_cards"]]
-        ):
-            if self.log:
-                print("Dealer Blackjack")
-                print(" ".join([c.__str__() for c in curr_round_data["dealer_cards"]]))
-            curr_round_data["player_win"] = False
-            return curr_round_data
 
         # deal cards
         for agent, cards in [
@@ -53,8 +55,17 @@ class BlackJack:
                 agent.receive_card(card)
                 agent.view_card(card)
 
+        # check if player has ace card blackjack
+        if any([c.value == 14 for c in curr_round_data["player_cards"]]) and any(
+            [c.value in [10, 11, 12, 13] for c in curr_round_data["player_cards"]]
+        ):
+            if self.log:
+                print("Player Blackjack")
+                print(" ".join([c.__str__() for c in curr_round_data["player_cards"]]))
+            curr_round_data["player_blackjack"] = True
+
         # show player dealer faceup card
-        self.player_strategy.view_card(curr_round_data["dealer_cards"][0])
+        self.player_strategy.peek_dealer_card(curr_round_data["dealer_cards"][0])
 
         if self.log:
             print("Dealer Face Up Card", curr_round_data["dealer_cards"][0].__str__())
@@ -115,6 +126,11 @@ class BlackJack:
             else:
                 curr_round_data["dealer_hit"].append(self.dealer_strategy.hit_or_pass())
 
+        if self.log:
+            print(
+                "Dealer Hit:",
+                " ".join([c.__str__() for c in curr_round_data["dealer_cards"]]),
+            )
         # see who wins
         player_best = max(
             [
@@ -134,11 +150,20 @@ class BlackJack:
                 )
             ]
         )
-        curr_round_data["player_win"] = (
-            None if player_best == dealer_best else player_best > dealer_best
-        )
+        if dealer_best == player_best:
+            curr_round_data["player_win"] = None
+            if dealer_best == 21 and player_best == 21:
+                curr_round_data["player_blackjack"] = False
+        else:
+            curr_round_data["player_win"] = player_best > dealer_best
         if self.log:
             print(
                 f'Player {"Tie" if curr_round_data["player_win"] is None else "Win" if curr_round_data["player_win"] else "Lose"}'
             )
         return curr_round_data
+
+    def play_entire_shoe(self) -> List[dict]:
+        logs = []
+        while len(logs) == 0 or logs[-1] is not None:
+            logs.append(self.execute_round())
+        return logs[:-1]
